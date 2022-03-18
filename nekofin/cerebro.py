@@ -7,13 +7,15 @@ HOLD = "HOLD"
 
 
 class Cerebro:
-    def __init__(self, cash=100000, commision=0.001, strategy=None):
-        self.data = []
+    def __init__(self, data, cash=100000, commision=0.001, strategy=None):
+        self.data = data
         self.cash = cash
         self.commision = commision
         self.asset = 0
         self.log = []
         self.strategy = strategy
+        self.close = self.data.Close.to_list()
+        self.open = self.data.Open.to_list()
 
     def feedData(self, data):
         self.data = data
@@ -23,6 +25,9 @@ class Cerebro:
         if end is None:
             end = len(self.data) - 1
         for i in range(start, end):
+            print(self.cash, self.asset)
+            assert self.cash >= 0
+            assert self.asset >= 0
             if verbal:
                 print(i)
             self.next(i)
@@ -31,12 +36,13 @@ class Cerebro:
         pass
 
     def buy(self, i, size=1):
-        self.cash -= self.data.iloc[i + 1]["Open"] * size * (1 + self.commision)
+
+        self.cash -= self.open[i + 1] * size * (1 + self.commision)
         self.asset += size
         self.log.append(
             {
                 "action": BUY,
-                "price": self.data.iloc[i]["Close"],
+                "price": self.close[i],
                 "size": size,
                 "time": self.data.index[i],
                 "asset": self.asset,
@@ -46,12 +52,12 @@ class Cerebro:
         )
 
     def sell(self, i, size=1):
-        self.cash += self.data.iloc[i + 1]["Open"] * size * (1 - self.commision)
+        self.cash += self.open[i + 1] * size * (1 - self.commision)
         self.asset -= size
         self.log.append(
             {
                 "action": SELL,
-                "price": self.data.iloc[i]["Close"],
+                "price": self.close[i],
                 "size": size,
                 "time": self.data.index[i],
                 "asset": self.asset,
@@ -64,7 +70,7 @@ class Cerebro:
         self.log.append(
             {
                 "action": HOLD,
-                "price": self.data.iloc[i]["Close"],
+                "price": self.close[i],
                 "size": 0,
                 "time": self.data.index[i],
                 "asset": self.asset,
@@ -77,7 +83,7 @@ class Cerebro:
         self.next = types.MethodType(strategy, self)
 
     def getValue(self, i=0):
-        return self.cash + self.asset * self.data.iloc[i]["Close"]
+        return self.cash + self.asset * self.close[i]
 
     def getLog():
         pass
