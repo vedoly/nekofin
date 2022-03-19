@@ -1,6 +1,8 @@
 import pandas as pd
 import types
 
+ASSERT_BUY = "ASSERT_BUY"
+ASSERT_SELL = "ASSERT_SELL"
 BUY = "BUY"
 SELL = "SELL"
 HOLD = "HOLD"
@@ -37,8 +39,10 @@ class Cerebro:
     def next(self, i):
         pass
 
+    def assert_buy(self, i, size = 1):
+        return self.cash >= self.open[i + 1] * size * (1 + self.commision)
+    
     def buy(self, i, size=1):
-
         self.cash -= self.open[i + 1] * size * (1 + self.commision)
         self.asset += size
         self.log.append(
@@ -52,6 +56,9 @@ class Cerebro:
                 "value": self.getValue(i),
             }
         )
+        
+    def assert_sell(self, i, size=1):
+        return self.asset >= size
 
     def sell(self, i, size=1):
         self.cash += self.open[i + 1] * size * (1 - self.commision)
@@ -104,11 +111,17 @@ def runBackTest(data, strategy, cash=100000, commision=0.001):
             cash -= action["size"] * action["price"] * (1 + commision)
             asset += action["size"]
             log.append((cash, asset, BUY, self.close[i]))
+        
+        elif action["type"] == ASSERT_BUY:
+            return cash >= action["size"] * action["price"] * (1 + commision)
 
-        elif action["type"] == "sell":
+        elif action["type"] == SELL:
             cash += action["size"] * action["price"] * (1 - commision)
             asset -= action["size"]
             log.append((cash, asset, SELL, self.close[i]))
+            
+        elif action["type"] == ASSERT_SELL:
+            return asset >= action["size"]
 
         else:
             log.append((cash, asset, HOLD, self.close[i]))
