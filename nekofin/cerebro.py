@@ -92,10 +92,12 @@ class Cerebro:
         )
 
     def setConfig(self, customize):
-        self.customize = types.MethodType(customize, self)
-        self.customize()
+        pass
         
-    def addStrategy(self, strategy):
+    def addStrategy(self, strategy, params = { }, setConfig = self.setConfig):
+        # TODO: convert params as bt params
+        self.p = params
+        setConfig()
         self.next = types.MethodType(strategy, self)
 
     def getValue(self, i=0):
