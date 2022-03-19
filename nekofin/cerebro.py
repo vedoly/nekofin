@@ -91,7 +91,7 @@ class Cerebro:
             }
         )
 
-    def setConfig(self, customize):
+    def setConfig(self):
         pass
         
     def addStrategy(self, strategy, params = { }, setConfig = None):
