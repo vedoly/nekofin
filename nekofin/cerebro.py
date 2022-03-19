@@ -35,7 +35,10 @@ class Cerebro:
             if verbal and self.enable_log:
                 print(i)
             self.next(i)
-
+    
+    def customize(self, i):
+        pass
+       
     def next(self, i):
         pass
 
@@ -88,6 +91,10 @@ class Cerebro:
             }
         )
 
+    def setConfig(self, customize):
+        self.customize = types.MethodType(customize, self)
+        self.customize()
+        
     def addStrategy(self, strategy):
         self.next = types.MethodType(strategy, self)
 
