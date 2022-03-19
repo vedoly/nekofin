@@ -7,7 +7,7 @@ HOLD = "HOLD"
 
 
 class Cerebro:
-    def __init__(self, data, cash=100000, commision=0.001, strategy=None):
+    def __init__(self, data, cash=100000, commision=0.001, strategy=None, enable_log = False):
         self.data = data
         self.cash = cash
         self.commision = commision
@@ -16,6 +16,7 @@ class Cerebro:
         self.strategy = strategy
         self.close = self.data.Close.to_list()
         self.open = self.data.Open.to_list()
+        self.enable_log = enable_log
 
     def feedData(self, data):
         self.data = data
@@ -25,10 +26,11 @@ class Cerebro:
         if end is None:
             end = len(self.data) - 1
         for i in range(start, end):
-            print(self.cash, self.asset)
+            if self.enable_log:
+                print(self.cash, self.asset)
             assert self.cash >= 0
             assert self.asset >= 0
-            if verbal:
+            if verbal and self.enable_log:
                 print(i)
             self.next(i)
 
@@ -92,7 +94,7 @@ class Cerebro:
 def runBackTest(data, strategy, cash=100000, commision=0.001):
     cash = 100000
     asset = 0
-    log = [(cash, asset, "FIRST", data.iloc[0]["Close"])]
+    log = [(cash, asset, "FIRST", self.close[0])]
 
     for i in range(len(data)):
         action = strategy(data, i, cash)
@@ -101,15 +103,15 @@ def runBackTest(data, strategy, cash=100000, commision=0.001):
         if action["type"] == BUY:
             cash -= action["size"] * action["price"] * (1 + commision)
             asset += action["size"]
-            log.append((cash, asset, BUY, data.iloc[i]["Close"]))
+            log.append((cash, asset, BUY, self.close[i]))
 
         elif action["type"] == "sell":
             cash += action["size"] * action["price"] * (1 - commision)
             asset -= action["size"]
-            log.append((cash, asset, SELL, data.iloc[i]["Close"]))
+            log.append((cash, asset, SELL, self.close[i]))
 
         else:
-            log.append((cash, asset, HOLD, data.iloc[i]["Close"]))
+            log.append((cash, asset, HOLD, self.close[i]))
     return log
 
 
@@ -124,11 +126,11 @@ def demo_strategy(data, i, cash):
 
 
 def buy(data, i, size=1):
-    return {"type": BUY, "size": size, "price": data.iloc[i]["Close"]}
+    return {"type": BUY, "size": size, "price": self.close[i]}
 
 
 def sell(data, i, size=1):
-    return {"type": SELL, "size": size, "price": data.iloc[i]["Close"]}
+    return {"type": SELL, "size": size, "price": self.close[i]}
 
 
 def hold(data, i):
