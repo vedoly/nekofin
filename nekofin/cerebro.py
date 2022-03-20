@@ -9,7 +9,7 @@ HOLD = "HOLD"
 
 
 class Cerebro:
-    def __init__(self, data, cash=100000, commision=0.001, strategy=None, enable_log = False):
+    def __init__(self, data, cash=100000, commission=0.001, strategy=None, enable_log = False):
         self.data = data
         self.cash = cash
         self.commision = commision
