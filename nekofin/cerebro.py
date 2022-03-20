@@ -12,7 +12,7 @@ class Cerebro:
     def __init__(self, data, cash=100000, commission=0.001, strategy=None, enable_log = False):
         self.data = data
         self.cash = cash
-        self.commision = commision
+        self.commission = commission
         self.asset = 0
         self.log = []
         self.strategy = strategy
@@ -43,10 +43,10 @@ class Cerebro:
         pass
 
     def assert_buy(self, i, size = 1):
-        return self.cash >= self.open[i + 1] * size * (1 + self.commision)
+        return self.cash >= self.open[i + 1] * size * (1 + self.commission)
     
     def buy(self, i, size=1):
-        self.cash -= self.open[i + 1] * size * (1 + self.commision)
+        self.cash -= self.open[i + 1] * size * (1 + self.commission)
         self.asset += size
         self.log.append(
             {
@@ -64,7 +64,7 @@ class Cerebro:
         return self.asset >= size
 
     def sell(self, i, size=1):
-        self.cash += self.open[i + 1] * size * (1 - self.commision)
+        self.cash += self.open[i + 1] * size * (1 - self.commission)
         self.asset -= size
         self.log.append(
             {
@@ -109,7 +109,7 @@ class Cerebro:
         pass
 
 
-def runBackTest(data, strategy, cash=100000, commision=0.001):
+def runBackTest(data, strategy, cash=100000, commission=0.001):
     cash = 100000
     asset = 0
     log = [(cash, asset, "FIRST", self.close[0])]
@@ -119,15 +119,15 @@ def runBackTest(data, strategy, cash=100000, commision=0.001):
         if not action:
             pass
         if action["type"] == BUY:
-            cash -= action["size"] * action["price"] * (1 + commision)
+            cash -= action["size"] * action["price"] * (1 + commission)
             asset += action["size"]
             log.append((cash, asset, BUY, self.close[i]))
         
         elif action["type"] == ASSERT_BUY:
-            return cash >= action["size"] * action["price"] * (1 + commision)
+            return cash >= action["size"] * action["price"] * (1 + commission)
 
         elif action["type"] == SELL:
-            cash += action["size"] * action["price"] * (1 - commision)
+            cash += action["size"] * action["price"] * (1 - commission)
             asset -= action["size"]
             log.append((cash, asset, SELL, self.close[i]))
             
