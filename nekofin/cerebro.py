@@ -9,7 +9,9 @@ HOLD = "HOLD"
 
 
 class Cerebro:
-    def __init__(self, data, cash=100000, commission=0.001, strategy=None, enable_log = False):
+    def __init__(
+        self, data, cash=100000, commission=0.001, strategy=None, enable_log=False
+    ):
         self.data = data
         self.cash = cash
         self.commission = commission
@@ -35,16 +37,16 @@ class Cerebro:
             if verbal and self.enable_log:
                 print(i)
             self.next(i)
-    
+
     def customize(self, i):
         pass
-       
+
     def next(self, i):
         pass
 
-    def assert_buy(self, i, size = 1):
+    def assert_buy(self, i, size=1):
         return self.cash >= self.open[i + 1] * size * (1 + self.commission)
-    
+
     def buy(self, i, size=1):
         self.cash -= self.open[i + 1] * size * (1 + self.commission)
         self.asset += size
@@ -59,7 +61,7 @@ class Cerebro:
                 "value": self.getValue(i),
             }
         )
-        
+
     def assert_sell(self, i, size=1):
         return self.asset >= size
 
@@ -93,8 +95,8 @@ class Cerebro:
 
     def setConfig(self):
         pass
-        
-    def addStrategy(self, strategy, params = { }, setConfig = None):
+
+    def addStrategy(self, strategy, params={}, setConfig=None):
         # TODO: convert params as bt params
         self.p = params
         if setConfig is not None:
@@ -109,34 +111,57 @@ class Cerebro:
         pass
 
 
-def runBackTest(data, strategy, cash=100000, commission=0.001):
-    cash = 100000
-    asset = 0
-    log = [(cash, asset, "FIRST", self.close[0])]
+class Portforio:
+    def __init__(self, cash, asset):
+        self.cash = cash
+        self.asset = asset
 
-    for i in range(len(data)):
-        action = strategy(data, i, cash)
-        if not action:
-            pass
-        if action["type"] == BUY:
-            cash -= action["size"] * action["price"] * (1 + commission)
-            asset += action["size"]
-            log.append((cash, asset, BUY, self.close[i]))
-        
-        elif action["type"] == ASSERT_BUY:
-            return cash >= action["size"] * action["price"] * (1 + commission)
 
-        elif action["type"] == SELL:
-            cash += action["size"] * action["price"] * (1 - commission)
-            asset -= action["size"]
-            log.append((cash, asset, SELL, self.close[i]))
-            
-        elif action["type"] == ASSERT_SELL:
-            return asset >= action["size"]
+class SuperCerebro(Cerebro):
+    def __init__(
+        self, data, cash=100000, commission=0.001, strategy=None, enable_log=False
+    ):
+        super().__init__(data, cash, commission, strategy, enable_log)
+        self.port = []
 
-        else:
-            log.append((cash, asset, HOLD, self.close[i]))
-    return log
+    def createnNewPortforio(self, cash, asset):
+        self.cash -= cash
+        self.asset -= asset
+        self.port.append(Portforio(cash, asset))
+
+    def buy(self, i, port, size=1):
+        port.cash -= self.open[i + 1] * size * (1 + self.commission)
+        port.asset += size
+        self.log.append(
+            {
+                "action": BUY,
+                "price": self.close[i],
+                "size": size,
+                "time": self.data.index[i],
+                "asset": self.asset,
+                "cash": self.cash,
+                "value": self.getValue(i),
+                "port": "port",
+            }
+        )
+        return
+
+    def sell(self, i, port, size=1):
+        port.cash += self.open[i + 1] * size * (1 - self.commission)
+        port.asset -= size
+        self.log.append(
+            {
+                "action": SELL,
+                "price": self.close[i],
+                "size": size,
+                "time": self.data.index[i],
+                "asset": self.asset,
+                "cash": self.cash,
+                "value": self.getValue(i),
+                "port": "port",
+            }
+        )
+        return
 
 
 # interface fucntion strategy
@@ -147,15 +172,3 @@ def demo_strategy(data, i, cash):
         return sell(data, i)
     else:
         return hold(data, i)
-
-
-def buy(data, i, size=1):
-    return {"type": BUY, "size": size, "price": self.close[i]}
-
-
-def sell(data, i, size=1):
-    return {"type": SELL, "size": size, "price": self.close[i]}
-
-
-def hold(data, i):
-    return {"type": HOLD}
